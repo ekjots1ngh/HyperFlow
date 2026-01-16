@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 HyperFlow
 
-## Getting Started
+One-click bridge to Hyperliquid from any chain using LI.FI routing.
 
-First, run the development server:
+![HyperFlow Demo](./demo/screenshot.png)
 
+## 🎯 What is HyperFlow?
+
+HyperFlow eliminates the friction of getting funds onto Hyperliquid. Instead of juggling multiple sites and transactions, users bridge from any major chain in a single, beautiful flow.
+
+**Live Demo**: [hyperflow.xyz](https://hyperflow.xyz)  
+**Demo Video**: [3-minute walkthrough](https://youtube.com/...)
+
+## ✨ Features
+
+- **One-Click Onboarding**: Bridge from Ethereum, Arbitrum, Optimism, Polygon, or Base
+- **Auto-Deposit**: Funds land directly in your Hyperliquid trading account
+- **Smart Routing**: LI.FI finds the fastest, cheapest route every time
+- **Mobile-First**: PWA with haptic feedback, works offline, installs like a native app
+- **Transaction History**: All your bridges saved locally, synced across devices
+- **Developer SDK**: 5 lines of code to add HyperFlow to your dApp
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
+- **Bridge**: LI.FI SDK for optimal routing
+- **Wallet**: RainbowKit + Wagmi v2
+- **Storage**: IndexedDB (localforage) for offline persistence
+- **Animations**: Framer Motion
+- **State**: Zustand
+
+## 📦 Installation (for developers)
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install hyperflow-kit
+```
+```tsx
+import { HyperFlowWidget } from 'hyperflow-kit';
+
+function App() {
+	return (
+		<HyperFlowWidget
+			defaultChain={1}
+			autoDeposit={true}
+			onComplete={(txHash) => console.log('Ready to trade!', txHash)}
+		/>
+	);
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚦 Local Development
+```bash
+# Clone repo
+git clone https://github.com/yourusername/hyperflow
+cd hyperflow
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Install dependencies
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Set up environment variables
+cp .env.local.example .env.local
+# Add your WalletConnect Project ID
 
-## Learn More
+# Run dev server
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3000](http://localhost:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎬 Demo Video Timestamps
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 0:00 - Problem: Current onboarding friction
+- 0:20 - Solution: Mobile demo (Arbitrum → HyperEVM)
+- 1:30 - Developer SDK integration
+- 2:15 - Technical highlights
+- 2:45 - Live at hyperflow.xyz
 
-## Deploy on Vercel
+## 🏆 Hackathon Categories
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Primary**: Main prize ($3,000)  
+**Secondary**: UX Honorable Mention ($250)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Why HyperFlow wins**:
+- ✅ Creative LI.FI use (route comparison, optimization)
+- ✅ Clean UX (mobile-first, sub-30s flow, clear error handling)
+- ✅ Reliable (comprehensive error recovery, retry logic)
+- ✅ Useful (standalone app + reusable SDK for builders)
+
+## 📱 Mobile Features
+
+- Bottom sheet UI for native feel
+- Haptic feedback on interactions
+- PWA installable to home screen
+- Offline transaction history
+- One-thumb usable interface
+- Works with WalletConnect mobile wallets
+
+## 🤝 Contributing
+
+Pull requests welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## 📄 License
+
+MIT © [Your Name]
+
+---
+
+Built with ❤️ for the LI.FI x Hyperliquid Hackathon
