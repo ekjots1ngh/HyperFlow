@@ -8,16 +8,17 @@ import type { Chain } from 'wagmi/chains';
 import { mainnet, arbitrum, optimism, polygon, base } from 'wagmi/chains';
 
 const hyperEVM: Chain = {
-  id: 998,
-  name: 'HyperEVM',
-  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://rpc.hyperliquid.xyz'] },
-    public: { http: ['https://rpc.hyperliquid.xyz'] },
-  },
-  blockExplorers: {
-    default: { name: 'Explorer', url: 'https://explorer.hyperliquid.xyz' },
-  },
+	id: 998,
+	name: 'HyperEVM',
+	nativeCurrency: { name: 'HYPE', symbol: 'HYPE', decimals: 18 },
+	rpcUrls: {
+		default: { http: ['https://api.hyperliquid.xyz/evm'] },
+		public: { http: ['https://api.hyperliquid.xyz/evm'] },
+	},
+	blockExplorers: {
+		default: { name: 'HyperEVM Explorer', url: 'https://hyperevmscan.io' },
+	},
+	testnet: false,
 };
 
 const config = getDefaultConfig({

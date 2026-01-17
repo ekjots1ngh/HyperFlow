@@ -104,9 +104,35 @@ MIT © [Your Name]
 
 ## ⚠️ Current Limitations
 
-- **HyperEVM Bridge**: Currently bridges to Arbitrum via LI.FI. The Arbitrum → HyperEVM bridge integration is in progress as HyperEVM chain (998) is not yet supported in LI.FI's routing.
-- **Workaround**: Users bridge to Arbitrum, then use Hyperliquid's native bridge UI for the final step.
-- **Future**: Direct integration with Hyperliquid's bridge contract for seamless Arbitrum → HyperEVM flow.
+- **Auto-Deposit**: Transfers USDC to HyperCore's system address automatically; if Hyperliquid updates the address, be sure to update the constant before deploying.
+- **Route Availability**: LI.FI routing to HyperEVM (998) is recently enabled. If LI.FI returns no route, users should retry or fall back to Hyperliquid's native bridge UI.
+
+### The Complete Flow
+```
+User's Chain (ETH/ARB/OP/etc.)
+	↓ (LI.FI handles this - one transaction)
+HyperEVM (chain 998)
+	↓ (HyperFlow transfers USDC to the HyperCore system address)
+HyperCore (trading account)
+	↓
+Ready to trade on Hyperliquid! 🎉
+```
+
+### Quick Route Check
+```ts
+import { getRoutes } from '@lifi/sdk';
+
+const routes = await getRoutes({
+  fromChainId: 1,
+  toChainId: 998,
+  fromTokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  toTokenAddress: '0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34',
+  fromAmount: '1000000',
+  fromAddress: '0xYourAddress',
+});
+
+console.log('Routes found:', routes.routes.length);
+```
 
 ---
 

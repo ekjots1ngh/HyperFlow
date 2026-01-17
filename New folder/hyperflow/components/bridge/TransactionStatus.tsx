@@ -24,15 +24,11 @@ export function TransactionStatus({ state, onReset }: TransactionStatusProps) {
 						<div className="space-y-2">
 							<div className="flex items-center gap-2 text-sm">
 								<div className="h-2 w-2 animate-pulse rounded-full bg-blue-600" />
-								<span>Step 1: Bridging to Arbitrum...</span>
+								<span>Step 1: Bridging to HyperEVM...</span>
 							</div>
 							<div className="flex items-center gap-2 text-sm text-gray-400">
 								<div className="h-2 w-2 rounded-full bg-gray-300" />
-								<span>Step 2: Bridging to HyperEVM...</span>
-							</div>
-							<div className="flex items-center gap-2 text-sm text-gray-400">
-								<div className="h-2 w-2 rounded-full bg-gray-300" />
-								<span>Step 3: Depositing to Hyperliquid...</span>
+								<span>Step 2: Depositing to Hyperliquid...</span>
 							</div>
 						</div>
 					</div>

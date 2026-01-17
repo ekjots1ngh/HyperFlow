@@ -20,29 +20,16 @@ interface DepositParams {
 	tokenDecimals?: number;
 }
 
-const ERC20_APPROVE_ABI = [
+const ERC20_TRANSFER_ABI = [
 	{
 		type: "function",
-		name: "approve",
+		name: "transfer",
 		stateMutability: "nonpayable",
 		inputs: [
-			{ name: "spender", type: "address" },
+			{ name: "to", type: "address" },
 			{ name: "amount", type: "uint256" },
 		],
 		outputs: [{ name: "", type: "bool" }],
-	},
-] as const;
-
-const HYPERLIQUID_DEPOSIT_ABI = [
-	{
-		type: "function",
-		name: "deposit",
-		stateMutability: "nonpayable",
-		inputs: [
-			{ name: "token", type: "address" },
-			{ name: "amount", type: "uint256" },
-		],
-		outputs: [],
 	},
 ] as const;
 
@@ -66,26 +53,14 @@ export function useHyperliquidDeposit() {
 
 				const amountWei = parseUnits(normalizedAmount, tokenDecimals);
 
-				setState({ status: "approving" });
-
-				const approveHash = await walletClient.writeContract({
-					account: walletClient.account ?? undefined,
-					address: tokenAddress,
-					abi: ERC20_APPROVE_ABI,
-					functionName: "approve",
-					args: [bridgeAddress, amountWei],
-				});
-
-				await publicClient.waitForTransactionReceipt({ hash: approveHash });
-
 				setState({ status: "depositing" });
 
 				const depositHash = await walletClient.writeContract({
 					account: walletClient.account ?? undefined,
-					address: bridgeAddress,
-					abi: HYPERLIQUID_DEPOSIT_ABI,
-					functionName: "deposit",
-					args: [tokenAddress, amountWei],
+					address: tokenAddress,
+					abi: ERC20_TRANSFER_ABI,
+					functionName: "transfer",
+					args: [bridgeAddress, amountWei],
 				});
 
 				await publicClient.waitForTransactionReceipt({ hash: depositHash });
