@@ -102,6 +102,12 @@ Pull requests welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 MIT © [Your Name]
 
+## ⚠️ Current Limitations
+
+- **HyperEVM Bridge**: Currently bridges to Arbitrum via LI.FI. The Arbitrum → HyperEVM bridge integration is in progress as HyperEVM chain (998) is not yet supported in LI.FI's routing.
+- **Workaround**: Users bridge to Arbitrum, then use Hyperliquid's native bridge UI for the final step.
+- **Future**: Direct integration with Hyperliquid's bridge contract for seamless Arbitrum → HyperEVM flow.
+
 ---
 
 Built with ❤️ for the LI.FI x Hyperliquid Hackathon

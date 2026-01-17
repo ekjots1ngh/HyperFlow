@@ -22,6 +22,8 @@ const ETHEREUM_USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Ad
 const HYPER_EVM_USDC_ADDRESS = '0x...' as Address; // TODO: replace with deployed HyperEVM USDC address
 const HYPERLIQUID_BRIDGE_ADDRESS = '0x...' as Address; // TODO: replace with official Hyperliquid bridge contract
 const USDC_DECIMALS = 6;
+const ARBITRUM_CHAIN_ID = 42161;
+const ARBITRUM_USDC_ADDRESS = '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8' as Address;
 
 export function BridgeInterface() {
   const { address, isConnected } = useAccount();
@@ -45,11 +47,14 @@ export function BridgeInterface() {
 
     try {
       const fromAmount = parseUnits(amount, USDC_DECIMALS).toString();
+      const toChain = ARBITRUM_CHAIN_ID;
+      const toTokenAddress = ARBITRUM_USDC_ADDRESS;
+
       return {
         fromChainId: fromChain,
-        toChainId: HYPER_EVM_CHAIN_ID,
+        toChainId: toChain,
         fromTokenAddress: ETHEREUM_USDC_ADDRESS,
-        toTokenAddress: HYPER_EVM_USDC_ADDRESS,
+        toTokenAddress,
         fromAmount,
         fromAddress: address,
       } satisfies RoutesRequest;
@@ -91,7 +96,7 @@ export function BridgeInterface() {
       id: txId,
       timestamp: Date.now(),
       fromChain,
-      toChain: HYPER_EVM_CHAIN_ID,
+      toChain: ARBITRUM_CHAIN_ID,
       fromAmount: (parsedAmount * 1e6).toString(),
       toAmount: selectedRoute.toAmount ?? '0',
       fromToken: 'USDC',
@@ -247,7 +252,10 @@ export function BridgeInterface() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-600">To HyperEVM</label>
+              <label className="text-sm font-medium text-gray-600">
+                To Arbitrum
+                <span className="ml-1 text-xs text-gray-500">(Step 1 of 2)</span>
+              </label>
               <div className="rounded-2xl border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-purple-50 px-6 py-6">
                 <div className="text-3xl font-bold text-gray-900">
                   {isLoading ? (
