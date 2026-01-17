@@ -15,9 +15,14 @@ import { useTransactionStore } from '@/lib/store/transactions';
 import type { BridgeState } from '@/lib/types';
 import { triggerHaptic, useIsMobile } from '@/lib/utils/mobile';
 import { RouteCard } from './bridge/RouteCard';
+import { RouteSkeleton } from './bridge/RouteSkeleton';
 import { TransactionStatus } from './bridge/TransactionStatus';
+import { NetworkStatus } from './bridge/NetworkStatus';
 import { BottomSheet } from './mobile/BottomSheet';
 import { MobileHeader } from './mobile/MobileHeader';
+import { AchievementToast } from './AchievementToast';
+import { checkAchievement } from '@/lib/achievements';
+import type { Achievement } from '@/lib/achievements';
 
 const HYPER_EVM_CHAIN_ID = 999;
 const ETHEREUM_USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address;
@@ -35,6 +40,7 @@ export function BridgeInterface() {
   const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(0);
   const [showRoutes, setShowRoutes] = useState<boolean>(false);
   const [autoDeposit, setAutoDeposit] = useState<boolean>(true);
+  const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mark hydration readiness after mount
@@ -184,6 +190,19 @@ export function BridgeInterface() {
           txHash,
         });
 
+        const firstBridge = checkAchievement('first_bridge', 1);
+        if (firstBridge) {
+          setUnlockedAchievement(firstBridge);
+        }
+
+        const numericAmount = Number.parseFloat(txAmount);
+        if (Number.isFinite(numericAmount) && numericAmount > 10_000) {
+          const whale = checkAchievement('whale', numericAmount);
+          if (whale) {
+            setUnlockedAchievement(whale);
+          }
+        }
+
         if (shouldAutoDeposit) {
           try {
             const depositHash = await depositToHyperliquid({
@@ -267,20 +286,23 @@ export function BridgeInterface() {
                 </div>
               </div>
 
-              <select
-                value={fromChain}
-                onChange={(event) => {
-                  setFromChain(Number(event.target.value));
-                  triggerHaptic('light');
-                }}
-                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 font-medium outline-none focus:border-blue-500"
-              >
-                <option value={1}>Ethereum</option>
-                <option value={42161}>Arbitrum</option>
-                <option value={10}>Optimism</option>
-                <option value={137}>Polygon</option>
-                <option value={8453}>Base</option>
-              </select>
+              <div className="flex items-center justify-between mb-2">
+                <select
+                  value={fromChain}
+                  onChange={(event) => {
+                    setFromChain(Number(event.target.value));
+                    triggerHaptic('light');
+                  }}
+                  className="flex-1 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 font-medium outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                >
+                  <option value={1}>🔷 Ethereum Mainnet</option>
+                  <option value={42161}>🔵 Arbitrum One</option>
+                  <option value={10}>🔴 Optimism</option>
+                  <option value={137}>🟣 Polygon</option>
+                  <option value={8453}>🔵 Base</option>
+                </select>
+              </div>
+              <NetworkStatus chainId={fromChain} />
             </div>
 
             <div className="-my-2 flex justify-center">
@@ -357,7 +379,9 @@ export function BridgeInterface() {
               </button>
             ) : null}
 
-            {!isMobile && routes.length > 0 ? (
+            {isLoading && <RouteSkeleton />}
+
+            {!isLoading && !isMobile && routes.length > 0 ? (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-600">Routes ({routes.length})</p>
                 <div className="space-y-2">
@@ -422,6 +446,10 @@ export function BridgeInterface() {
           resetBridge();
           resetDeposit();
         }}
+      />
+      <AchievementToast
+        achievement={unlockedAchievement}
+        onClose={() => setUnlockedAchievement(null)}
       />
     </>
   );
