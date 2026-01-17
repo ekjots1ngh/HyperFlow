@@ -7,8 +7,16 @@ import { WagmiProvider, http } from 'wagmi';
 import type { Chain } from 'wagmi/chains';
 import { mainnet, arbitrum, optimism, polygon, base } from 'wagmi/chains';
 
+const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+
+if (!walletConnectProjectId) {
+	console.warn(
+		'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set. Wallet connections will fail until a valid WalletConnect project ID is configured.',
+	);
+}
+
 const hyperEVM: Chain = {
-	id: 998,
+	id: 999,
 	name: 'HyperEVM',
 	nativeCurrency: { name: 'HYPE', symbol: 'HYPE', decimals: 18 },
 	rpcUrls: {
@@ -23,7 +31,7 @@ const hyperEVM: Chain = {
 
 const config = getDefaultConfig({
 	appName: 'HyperFlow',
-	projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // Replace with WalletConnect project ID
+	projectId: walletConnectProjectId ?? 'invalid-walletconnect-project-id',
 	chains: [mainnet, arbitrum, optimism, polygon, base, hyperEVM],
 	transports: {
 		[mainnet.id]: http(),

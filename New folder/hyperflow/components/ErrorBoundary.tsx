@@ -23,7 +23,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: unknown) {
-    // eslint-disable-next-line no-console
     console.error("ErrorBoundary caught:", error, errorInfo);
 
     if (typeof window !== "undefined" && (window as unknown as { gtag?: (key: string, value: string, options: Record<string, unknown>) => void }).gtag) {

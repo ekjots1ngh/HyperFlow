@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowDown, Info, Zap } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { RoutesRequest } from '@lifi/sdk';
 import type { Address } from 'viem';
 import { parseUnits } from 'viem';
@@ -17,7 +18,7 @@ import { TransactionStatus } from './bridge/TransactionStatus';
 import { BottomSheet } from './mobile/BottomSheet';
 import { MobileHeader } from './mobile/MobileHeader';
 
-const HYPER_EVM_CHAIN_ID = 998;
+const HYPER_EVM_CHAIN_ID = 999;
 const ETHEREUM_USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' as Address;
 const HYPER_EVM_USDC_ADDRESS = '0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34' as Address;
 const HYPERLIQUID_USDC_SYSTEM_ADDRESS = '0x20000000000000000000000000000000000003e9' as Address;
@@ -26,12 +27,18 @@ const USDC_DECIMALS = 6;
 export function BridgeInterface() {
   const { address, isConnected } = useAccount();
   const isMobile = useIsMobile();
+  const [isMounted, setIsMounted] = useState(false);
 
   const [fromChain, setFromChain] = useState<number>(1);
   const [amount, setAmount] = useState<string>('');
   const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(0);
   const [showRoutes, setShowRoutes] = useState<boolean>(false);
   const [autoDeposit, setAutoDeposit] = useState<boolean>(true);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mark hydration readiness after mount
+    setIsMounted(true);
+  }, []);
 
   const routeRequest = useMemo<RoutesRequest | null>(() => {
     if (!isConnected || !address) {
@@ -173,17 +180,26 @@ export function BridgeInterface() {
     }
   }, [activeTransactionContext, bridgeState.status, bridgeState.txHash, depositToHyperliquid, updateTransaction]);
 
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <>
       {isMobile ? <MobileHeader /> : null}
 
-      <div className={isMobile ? 'space-y-6 px-4 py-6' : 'mx-auto max-w-md space-y-6 p-6'}>
+      <div className={isMobile ? 'space-y-6 px-4 py-6' : 'mx-auto max-w-2xl space-y-6 p-6'}>
         {!isMobile ? (
-          <div className="text-center">
-            <h1 className="mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
-              HyperFlow
-            </h1>
-            <p className="text-gray-600">Bridge to Hyperliquid in one click</p>
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
+                  HyperFlow
+                </h1>
+                <p className="text-gray-600">Bridge to Hyperliquid in one click</p>
+              </div>
+              <ConnectButton chainStatus="icon" showBalance={false} />
+            </div>
           </div>
         ) : null}
 
@@ -346,8 +362,11 @@ export function BridgeInterface() {
             </motion.button>
           </motion.div>
         ) : (
-          <div className="rounded-3xl bg-gradient-to-br from-blue-50 to-purple-50 p-16 text-center">
-            <p className="text-gray-600">Connect wallet to start</p>
+          <div className="rounded-3xl bg-gradient-to-br from-blue-50 to-purple-50 p-12 text-center">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold text-gray-800">Connect your wallet</h2>
+              <p className="text-gray-600">Use the connect button in the header to link a wallet before configuring routes.</p>
+            </div>
           </div>
         )}
       </div>

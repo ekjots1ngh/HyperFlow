@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ExtensionErrorSilencer } from '@/components/ExtensionErrorSilencer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -44,6 +45,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ErrorBoundary>
+          <ExtensionErrorSilencer />
           <Providers>{children}</Providers>
         </ErrorBoundary>
       </body>

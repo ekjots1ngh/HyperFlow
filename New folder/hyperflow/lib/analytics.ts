@@ -13,7 +13,6 @@ export const Analytics = {
     }
 
     if (process.env.NODE_ENV === "development") {
-      // eslint-disable-next-line no-console
       console.log("\uD83D\uDCCA Analytics:", eventName, properties);
     }
   },

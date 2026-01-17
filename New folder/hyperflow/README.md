@@ -105,13 +105,13 @@ MIT © [Your Name]
 ## ⚠️ Current Limitations
 
 - **Auto-Deposit**: Transfers USDC to HyperCore's system address automatically; if Hyperliquid updates the address, be sure to update the constant before deploying.
-- **Route Availability**: LI.FI routing to HyperEVM (998) is recently enabled. If LI.FI returns no route, users should retry or fall back to Hyperliquid's native bridge UI.
+- **Route Availability**: LI.FI routing to HyperEVM (999) is recently enabled. If LI.FI returns no route, users should retry or fall back to Hyperliquid's native bridge UI.
 
 ### The Complete Flow
 ```
 User's Chain (ETH/ARB/OP/etc.)
 	↓ (LI.FI handles this - one transaction)
-HyperEVM (chain 998)
+HyperEVM (chain 999)
 	↓ (HyperFlow transfers USDC to the HyperCore system address)
 HyperCore (trading account)
 	↓
@@ -124,7 +124,7 @@ import { getRoutes } from '@lifi/sdk';
 
 const routes = await getRoutes({
   fromChainId: 1,
-  toChainId: 998,
+	toChainId: 999,
   fromTokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
   toTokenAddress: '0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34',
   fromAmount: '1000000',

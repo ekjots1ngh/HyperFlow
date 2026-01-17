@@ -17,7 +17,7 @@ const chainNames: Record<number, string> = {
   10: 'Optimism',
   137: 'Polygon',
   8453: 'Base',
-  998: 'HyperEVM',
+  999: 'HyperEVM',
 };
 
 const formatAmount = (value: string, symbol: string) => {
