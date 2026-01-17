@@ -3,45 +3,40 @@
 import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 
-interface SuccessConfettiProps {
-  active: boolean;
-}
+export function SuccessConfetti() {
+	useEffect(() => {
+		const duration = 2500;
+		const animationEnd = Date.now() + duration;
+		const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
 
-export function SuccessConfetti({ active }: SuccessConfettiProps) {
-  useEffect(() => {
-    if (!active) {
-      return;
-    }
+		const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
-    const duration = 2000;
-    const animationEnd = Date.now() + duration;
-    const defaults = {
-      startVelocity: 45,
-      spread: 360,
-      ticks: 220,
-      zIndex: 9999,
-    };
+		const interval: ReturnType<typeof setInterval> = setInterval(() => {
+			const timeLeft = animationEnd - Date.now();
 
-    const interval = window.setInterval(() => {
-      const timeLeft = animationEnd - Date.now();
+			if (timeLeft <= 0) {
+				clearInterval(interval);
+				return;
+			}
 
-      if (timeLeft <= 0) {
-        window.clearInterval(interval);
-        return;
-      }
+			const particleCount = 50 * (timeLeft / duration);
 
-      const particleCount = Math.round(250 * (timeLeft / duration));
+			confetti({
+				...defaults,
+				particleCount,
+				origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+				colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981'],
+			});
+			confetti({
+				...defaults,
+				particleCount,
+				origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+				colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981'],
+			});
+		}, 250);
 
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: Math.random(), y: Math.random() / 2 },
-        colors: ['#3b82f6', '#a855f7', '#fde68a', '#f97316'],
-      });
-    }, 250);
+		return () => clearInterval(interval);
+	}, []);
 
-    return () => window.clearInterval(interval);
-  }, [active]);
-
-  return null;
+	return null;
 }

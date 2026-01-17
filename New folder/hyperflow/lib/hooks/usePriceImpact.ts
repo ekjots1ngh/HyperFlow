@@ -10,7 +10,7 @@ interface PriceImpact {
 	severity: ImpactSeverity;
 }
 
-const EXPECTED_USDC_RATE = 1;
+const EXPECTED_RATE = 1; // Treat stablecoin swaps as 1:1 baseline.
 
 export function usePriceImpact(fromAmount: string, toAmount: string) {
 	const [impact, setImpact] = useState<PriceImpact>({
@@ -20,34 +20,33 @@ export function usePriceImpact(fromAmount: string, toAmount: string) {
 	});
 
 	useEffect(() => {
-		const from = Number.parseFloat(fromAmount ?? '');
-		const to = Number.parseFloat(toAmount ?? '');
+		if (!fromAmount || !toAmount) {
+			setImpact({ percentage: 0, usdLoss: 0, severity: 'low' });
+			return;
+		}
 
-		if (!Number.isFinite(from) || !Number.isFinite(to) || from <= 0 || to <= 0) {
-			setImpact({
-				percentage: 0,
-				usdLoss: 0,
-				severity: 'low',
-			});
+		const from = Number.parseFloat(fromAmount);
+		const to = Number.parseFloat(toAmount);
+
+		if (!Number.isFinite(from) || !Number.isFinite(to) || from === 0) {
+			setImpact({ percentage: 0, usdLoss: 0, severity: 'low' });
 			return;
 		}
 
 		const actualRate = to / from;
-		const impactPercent = ((EXPECTED_USDC_RATE - actualRate) / EXPECTED_USDC_RATE) * 100;
-		const usdLoss = from - to;
-		const normalizedPercentage = Math.abs(Number.isFinite(impactPercent) ? impactPercent : 0);
-		const normalizedLoss = Math.abs(Number.isFinite(usdLoss) ? usdLoss : 0);
+		const impactPct = ((EXPECTED_RATE - actualRate) / EXPECTED_RATE) * 100;
+		const loss = from - to;
 
 		let severity: ImpactSeverity = 'low';
-		if (normalizedPercentage > 1) {
+		if (Math.abs(impactPct) > 1) {
 			severity = 'high';
-		} else if (normalizedPercentage > 0.3) {
+		} else if (Math.abs(impactPct) > 0.3) {
 			severity = 'medium';
 		}
 
 		setImpact({
-			percentage: Number.parseFloat(normalizedPercentage.toFixed(2)),
-			usdLoss: Number.parseFloat(normalizedLoss.toFixed(2)),
+			percentage: Math.abs(impactPct),
+			usdLoss: Math.abs(loss),
 			severity,
 		});
 	}, [fromAmount, toAmount]);
