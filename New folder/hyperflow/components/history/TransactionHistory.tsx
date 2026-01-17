@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { History, Trash2 } from 'lucide-react';
 import { useTransactionStore } from '@/lib/store/transactions';
 import { BottomSheet } from '../mobile/BottomSheet';
@@ -12,74 +12,69 @@ export function TransactionHistory() {
   const { transactions, isLoading, loadTransactions, deleteTransaction, clearAll } = useTransactionStore();
 
   useEffect(() => {
-    void loadTransactions();
-  }, [loadTransactions]);
-
-  const handleClearAll = () => {
-    if (typeof window !== 'undefined' && window.confirm('Clear all transaction history?')) {
-      void clearAll();
-    }
-  };
+    loadTransactions();
+  }, []);
 
   return (
     <>
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-30 rounded-full border-2 border-gray-200 bg-white p-4 shadow-lg transition-colors hover:border-blue-500"
-        type="button"
-      >
-        <div className="relative">
-          <History className="h-6 w-6" />
-          {transactions.length > 0 ? (
-            <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+      {transactions.length > 0 && (
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-30 rounded-full border-2 border-gray-200 bg-white p-4 shadow-lg hover:border-blue-500"
+        >
+          <div className="relative">
+            <History className="w-6 h-6" />
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-bold">
               {transactions.length}
             </div>
-          ) : null}
-        </div>
-      </motion.button>
+          </div>
+        </motion.button>
+      )}
 
       <BottomSheet isOpen={isOpen} onClose={() => setIsOpen(false)} title="Transaction History">
-        <div className="space-y-4 p-6">
+        <div className="p-6 space-y-4">
           {isLoading ? (
-            <div className="py-12 text-center">
-              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+            <div className="text-center py-12">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               <p className="text-gray-600">Loading history...</p>
             </div>
           ) : transactions.length > 0 ? (
             <>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600">
-                  {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
-                </p>
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-600">{transactions.length} transaction{transactions.length !== 1 ? 's' : ''}</p>
                 <button
-                  onClick={handleClearAll}
-                  className="flex items-center gap-1 text-xs text-red-600 transition-colors hover:text-red-700"
-                  type="button"
+                  onClick={() => {
+                    if (confirm('Clear all transaction history?')) {
+                      clearAll();
+                    }
+                  }}
+                  className="flex items-center gap-1 text-xs text-red-600 hover:text-red-700"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="w-3 h-3" />
                   Clear all
                 </button>
               </div>
 
-              <div className="max-h-[60vh] overflow-y-auto pr-1">
-                <AnimatePresence initial={false}>
-                  {transactions.map((transaction) => (
+              <AnimatePresence>
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                  {transactions.map((tx) => (
                     <TransactionItem
-                      key={transaction.id}
-                      transaction={transaction}
-                      onDelete={(id) => deleteTransaction(id)}
-                      className="mb-3 last:mb-0"
+                      key={tx.id}
+                      transaction={tx}
+                      onDelete={deleteTransaction}
                     />
                   ))}
-                </AnimatePresence>
-              </div>
+                </div>
+              </AnimatePresence>
             </>
           ) : (
-            <div className="py-12 text-center">
-              <History className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+            <div className="text-center py-12">
+              <History className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-600">No transactions yet</p>
-              <p className="mt-1 text-sm text-gray-400">Your bridge history will appear here</p>
+              <p className="text-sm text-gray-400 mt-1">Your bridge history will appear here</p>
             </div>
           )}
         </div>

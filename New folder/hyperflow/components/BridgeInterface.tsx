@@ -18,6 +18,7 @@ import { RouteCard } from './bridge/RouteCard';
 import { RouteSkeleton } from './bridge/RouteSkeleton';
 import { TransactionStatus } from './bridge/TransactionStatus';
 import { NetworkStatus } from './bridge/NetworkStatus';
+import Link from 'next/link';
 import { BottomSheet } from './mobile/BottomSheet';
 import { MobileHeader } from './mobile/MobileHeader';
 import { AchievementToast } from './AchievementToast';
@@ -240,6 +241,15 @@ export function BridgeInterface() {
       <div className={isMobile ? 'space-y-6 px-4 py-6' : 'mx-auto max-w-2xl space-y-6 p-6'}>
         {!isMobile ? (
           <div className="flex flex-col gap-6">
+            <div className="flex justify-end">
+              <Link
+                href="/analytics"
+                className="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-200"
+              >
+                <span role="img" aria-label="analytics">📊</span>
+                Analytics
+              </Link>
+            </div>
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
