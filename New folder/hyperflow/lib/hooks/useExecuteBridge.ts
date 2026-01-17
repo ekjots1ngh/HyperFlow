@@ -2,11 +2,17 @@
 
 import { useState } from 'react';
 import { executeRoute } from '@lifi/sdk';
-import type { Route } from '@lifi/sdk';
+import type { Route, SwitchChainHook } from '@lifi/sdk';
 import type { BridgeState } from '../types';
 
 export function useExecuteBridge() {
 	const [state, setState] = useState<BridgeState>({ status: 'idle' });
+
+	const handleSwitchChain: SwitchChainHook = async (requiredChainId) => {
+		console.log('Switch to chain:', requiredChainId);
+		await switchChain(requiredChainId);
+		return undefined;
+	};
 
 	const execute = async (route: Route, fromAddress?: string) => {
 		setState({ status: 'executing' });
@@ -15,33 +21,15 @@ export function useExecuteBridge() {
 			if (fromAddress) {
 				console.debug('Executing bridge for wallet:', fromAddress);
 			}
-			const execution = await executeRoute(route, {
+			await executeRoute(route, {
 				updateRouteHook: (updatedRoute) => {
 					console.log('Route updated:', updatedRoute);
 				},
-				switchChainHook: async (requiredChainId) => {
-					console.log('Switch to chain:', requiredChainId);
-					await switchChain(requiredChainId);
-				},
-				acceptSlippageUpdateHook: async (oldSlippage, newSlippage) => {
-					console.log('Slippage update:', { oldSlippage, newSlippage });
-					return true;
-				},
+				switchChainHook: handleSwitchChain,
 			});
-
-			for await (const step of execution) {
-				if (step.status === 'DONE') {
-					setState({
-						status: 'success',
-						txHash: step.txHash,
-					});
-				} else if (step.status === 'FAILED') {
-					setState({
-						status: 'error',
-						error: step.error?.message ?? 'Transaction failed',
-					});
-				}
-			}
+			setState({
+				status: 'success',
+			});
 		} catch (error) {
 			setState({
 				status: 'error',

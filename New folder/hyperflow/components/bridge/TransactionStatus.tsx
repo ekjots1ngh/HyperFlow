@@ -2,6 +2,7 @@
 
 import type { BridgeState } from '@/lib/types';
 import { CheckCircle2, ExternalLink, Loader2, XCircle } from 'lucide-react';
+import { SuccessConfetti } from './SuccessConfetti';
 
 interface TransactionStatusProps {
 	state: BridgeState;
@@ -35,30 +36,33 @@ export function TransactionStatus({ state, onReset }: TransactionStatusProps) {
 				) : null}
 
 				{state.status === 'success' ? (
-					<div className="text-center">
-						<CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-green-600" />
-						<h3 className="mb-2 text-xl font-bold">Bridge Successful! 🎉</h3>
-						<p className="mb-4 text-gray-600">
-							Your funds are now on HyperEVM and ready to trade on Hyperliquid
-						</p>
-						{state.txHash ? (
-							<a
-								href={`https://explorer.hyperliquid.xyz/tx/${state.txHash}`}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="mb-4 inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+					<>
+						<SuccessConfetti />
+						<div className="text-center">
+							<CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-green-600" />
+							<h3 className="mb-2 text-xl font-bold">Bridge Successful! 🎉</h3>
+							<p className="mb-4 text-gray-600">
+								Your funds are now on HyperEVM and ready to trade on Hyperliquid
+							</p>
+							{state.txHash ? (
+								<a
+									href={`https://explorer.hyperliquid.xyz/tx/${state.txHash}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="mb-4 inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+								>
+									View transaction
+									<ExternalLink className="h-4 w-4" />
+								</a>
+							) : null}
+							<button
+								onClick={onReset}
+								className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700"
 							>
-								View transaction
-								<ExternalLink className="h-4 w-4" />
-							</a>
-						) : null}
-						<button
-							onClick={onReset}
-							className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700"
-						>
-							Bridge More
-						</button>
-					</div>
+								Bridge More
+							</button>
+						</div>
+					</>
 				) : null}
 
 				{state.status === 'error' ? (

@@ -13,6 +13,8 @@ export interface Chain {
 	logoURI?: string;
 }
 
+import type { Route } from '@lifi/sdk';
+
 export interface RouteOption {
 	id: string;
 	fromAmount: string;
@@ -20,10 +22,11 @@ export interface RouteOption {
 	estimatedTime: number;
 	gasCost: string;
 	steps: RouteStep[];
+	rawRoute: Route;
 }
 
 export interface RouteStep {
-	type: 'swap' | 'bridge';
+	type: string;
 	tool: string;
 	fromToken: Token;
 	toToken: Token;

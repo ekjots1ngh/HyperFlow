@@ -1,60 +1,50 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-
-type CongestionLevel = 'low' | 'medium' | 'high';
+import { useEffect, useState } from 'react';
 
 interface NetworkStatus {
-	congestion: CongestionLevel;
-	avgWaitTime: number;
+	congestion: 'low' | 'medium' | 'high';
+	gasPrice: number;
+	blockTime: number;
 	isOptimal: boolean;
 }
 
-const DEFAULT_STATUS: NetworkStatus = {
-	congestion: 'low',
-	avgWaitTime: 45,
-	isOptimal: true,
+const chainNames: Record<number, string> = {
+	1: 'Ethereum',
+	42161: 'Arbitrum',
+	10: 'Optimism',
+	137: 'Polygon',
+	8453: 'Base',
 };
 
 export function useNetworkStatus(chainId: number) {
-	const [status, setStatus] = useState<NetworkStatus>(DEFAULT_STATUS);
+	const [status, setStatus] = useState<NetworkStatus>({
+		congestion: 'low',
+		gasPrice: 0,
+		blockTime: 12,
+		isOptimal: true,
+	});
 
-	const seededRandom = useMemo(() => {
-		let seed = chainId || Date.now();
+	useEffect(() => {
+		const checkNetwork = () => {
+			const random = Math.random();
+			const congestion = random > 0.8 ? 'high' : random > 0.5 ? 'medium' : 'low';
+
+			setStatus({
+				congestion,
+				gasPrice: congestion === 'high' ? 50 : congestion === 'medium' ? 25 : 15,
+				blockTime: chainId === 1 ? 12 : 2,
+				isOptimal: congestion === 'low',
+			});
+		};
+
+		checkNetwork();
+		const interval = setInterval(checkNetwork, 15_000);
+
 		return () => {
-			seed = (seed * 9301 + 49297) % 233280;
-			return seed / 233280;
+			clearInterval(interval);
 		};
 	}, [chainId]);
 
-	useEffect(() => {
-		let cancelled = false;
-
-		const evaluateNetwork = () => {
-			const random = seededRandom();
-			let congestion: CongestionLevel = 'low';
-			if (random > 0.85) {
-				congestion = 'high';
-			} else if (random > 0.6) {
-				congestion = 'medium';
-			}
-
-			const avgWaitTime = congestion === 'high' ? 180 : congestion === 'medium' ? 90 : 45;
-			const isOptimal = congestion === 'low';
-
-			if (!cancelled) {
-				setStatus({ congestion, avgWaitTime, isOptimal });
-			}
-		};
-
-		evaluateNetwork();
-		const intervalId = setInterval(evaluateNetwork, 30_000);
-
-		return () => {
-			cancelled = true;
-			clearInterval(intervalId);
-		};
-	}, [seededRandom]);
-
-	return status;
+	return { status, chainName: chainNames[chainId] ?? 'Unknown' };
 }

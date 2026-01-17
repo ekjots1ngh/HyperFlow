@@ -6,43 +6,71 @@ export interface Achievement {
 	unlocked: boolean;
 	progress: number;
 	maxProgress: number;
+	reward?: string;
 }
 
-export const achievements: Achievement[] = [
+export const ACHIEVEMENTS: Achievement[] = [
 	{
 		id: 'first_bridge',
 		name: 'First Steps',
-		description: 'Complete your first bridge',
+		description: 'Complete your first bridge to Hyperliquid',
 		icon: '🎯',
 		unlocked: false,
 		progress: 0,
 		maxProgress: 1,
+		reward: 'Welcome to HyperFlow!',
 	},
 	{
 		id: 'speed_demon',
 		name: 'Speed Demon',
-		description: 'Bridge in under 60 seconds',
+		description: 'Bridge completed in under 60 seconds',
 		icon: '⚡',
 		unlocked: false,
 		progress: 0,
 		maxProgress: 1,
+		reward: 'Lightning fast!',
 	},
 	{
 		id: 'whale',
 		name: 'Whale Status',
-		description: 'Bridge over $10,000',
+		description: 'Bridge over $10,000 in a single transaction',
 		icon: '🐋',
 		unlocked: false,
 		progress: 0,
-		maxProgress: 10000,
+		maxProgress: 10_000,
+		reward: 'Big moves!',
 	},
 	{
 		id: 'gas_saver',
 		name: 'Gas Optimizer',
-		description: 'Save $10+ in gas fees',
+		description: 'Save $10+ in gas fees with smart routing',
 		icon: '💰',
 		unlocked: false,
 		progress: 0,
 		maxProgress: 10,
+		reward: 'Efficiency master!',
+	},
+	{
+		id: 'frequent_flyer',
+		name: 'Frequent Flyer',
+		description: 'Complete 10 bridges',
+		icon: '🚀',
+		unlocked: false,
+		progress: 0,
+		maxProgress: 10,
+		reward: 'HyperFlow veteran!',
 	},
 ];
+
+export function checkAchievement(achievementId: string, progress: number): Achievement | null {
+	const achievement = ACHIEVEMENTS.find((entry) => entry.id === achievementId);
+	if (!achievement) {
+		return null;
+	}
+
+	if (progress >= achievement.maxProgress && !achievement.unlocked) {
+		return { ...achievement, unlocked: true, progress };
+	}
+
+	return null;
+}
