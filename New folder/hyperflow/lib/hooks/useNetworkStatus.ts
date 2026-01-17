@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-interface NetworkStatus {
+export interface NetworkStatus {
 	congestion: 'low' | 'medium' | 'high';
 	gasPrice: number;
 	blockTime: number;

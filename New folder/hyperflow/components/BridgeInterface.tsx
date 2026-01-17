@@ -11,13 +11,16 @@ import { useAccount } from 'wagmi';
 import { useRoutes } from '@/lib/hooks/useRoutes';
 import { useExecuteBridge } from '@/lib/hooks/useExecuteBridge';
 import { useHyperliquidDeposit } from '@/lib/hooks/useHyperliquidDeposit';
+import { useNetworkStatus } from '@/lib/hooks/useNetworkStatus';
 import { useTransactionStore } from '@/lib/store/transactions';
 import type { BridgeState } from '@/lib/types';
 import { triggerHaptic, useIsMobile } from '@/lib/utils/mobile';
 import { RouteCard } from './bridge/RouteCard';
 import { RouteSkeleton } from './bridge/RouteSkeleton';
+import { SmartSuggestions } from './bridge/SmartSuggestions';
 import { TransactionStatus } from './bridge/TransactionStatus';
 import { NetworkStatus } from './bridge/NetworkStatus';
+import { GasAlert } from './bridge/GasAlert';
 import Link from 'next/link';
 import { BottomSheet } from './mobile/BottomSheet';
 import { MobileHeader } from './mobile/MobileHeader';
@@ -78,11 +81,19 @@ export function BridgeInterface() {
   const { state: bridgeState, execute, reset: resetBridge } = useExecuteBridge();
   const { state: depositState, depositToHyperliquid, reset: resetDeposit } = useHyperliquidDeposit();
   const { addTransaction, updateTransaction } = useTransactionStore();
+  const { status: networkStatus } = useNetworkStatus(fromChain);
 
   const [activeTransactionContext, setActiveTransactionContext] = useState<{
     id: string;
     amount: string;
     autoDeposit: boolean;
+    estimatedTime?: number;
+    gasCost?: string;
+  } | null>(null);
+  const [lastSuccessDetails, setLastSuccessDetails] = useState<{
+    amount: string;
+    estimatedTime?: number;
+    gasCost?: string;
   } | null>(null);
 
   const effectiveSelectedIndex = routes.length > 0 ? Math.min(selectedRouteIndex, routes.length - 1) : -1;
@@ -151,7 +162,14 @@ export function BridgeInterface() {
 
     try {
       await addTransaction(transaction);
-      setActiveTransactionContext({ id: txId, amount, autoDeposit });
+      setLastSuccessDetails(null);
+      setActiveTransactionContext({
+        id: txId,
+        amount,
+        autoDeposit,
+        estimatedTime: selectedRoute.estimatedTime,
+        gasCost: selectedRoute.gasCost,
+      });
       await execute(selectedRoute.rawRoute, address);
     } catch (bridgeError) {
       console.error('Bridge execution failed:', bridgeError);
@@ -181,7 +199,13 @@ export function BridgeInterface() {
       return;
     }
 
-    const { id: txId, amount: txAmount, autoDeposit: shouldAutoDeposit } = activeTransactionContext;
+    const {
+      id: txId,
+      amount: txAmount,
+      autoDeposit: shouldAutoDeposit,
+      estimatedTime,
+      gasCost,
+    } = activeTransactionContext;
 
     if (bridgeState.status === 'success') {
       const txHash = bridgeState.txHash;
@@ -203,6 +227,8 @@ export function BridgeInterface() {
             setUnlockedAchievement(whale);
           }
         }
+
+        setLastSuccessDetails({ amount: txAmount, estimatedTime, gasCost });
 
         if (shouldAutoDeposit) {
           try {
@@ -226,6 +252,7 @@ export function BridgeInterface() {
     } else if (bridgeState.status === 'error') {
       void updateTransaction(txId, { status: 'failed' }).finally(() => {
         setActiveTransactionContext(null);
+        setLastSuccessDetails(null);
       });
     }
   }, [activeTransactionContext, bridgeState.status, bridgeState.txHash, depositToHyperliquid, updateTransaction]);
@@ -296,6 +323,16 @@ export function BridgeInterface() {
                 </div>
               </div>
 
+              <SmartSuggestions
+                amount={amount}
+                fromChain={fromChain}
+                onSuggest={(suggestedAmount, reason) => {
+                  setAmount(suggestedAmount);
+                  triggerHaptic('medium');
+                  // Optional: surface reason with toast
+                }}
+              />
+
               <div className="flex items-center justify-between mb-2">
                 <select
                   value={fromChain}
@@ -312,7 +349,8 @@ export function BridgeInterface() {
                   <option value={8453}>🔵 Base</option>
                 </select>
               </div>
-              <NetworkStatus chainId={fromChain} />
+              <NetworkStatus status={networkStatus} />
+              <GasAlert gasPrice={networkStatus.gasPrice} />
             </div>
 
             <div className="-my-2 flex justify-center">
@@ -452,9 +490,11 @@ export function BridgeInterface() {
 
       <TransactionStatus
         state={transactionStatusState}
+        shareDetails={lastSuccessDetails}
         onReset={() => {
           resetBridge();
           resetDeposit();
+          setLastSuccessDetails(null);
         }}
       />
       <AchievementToast

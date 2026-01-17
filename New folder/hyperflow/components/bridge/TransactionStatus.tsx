@@ -1,37 +1,39 @@
 'use client';
 
 import type { BridgeState } from '@/lib/types';
-import { CheckCircle2, ExternalLink, Loader2, XCircle } from 'lucide-react';
+import { CheckCircle2, ExternalLink, XCircle } from 'lucide-react';
+import { LiveProgress } from './LiveProgress';
+import { ShareButton } from '../ShareButton';
 import { SuccessConfetti } from './SuccessConfetti';
 
 interface TransactionStatusProps {
 	state: BridgeState;
 	onReset: () => void;
+	shareDetails?: {
+		amount: string;
+		estimatedTime?: number;
+		gasCost?: string;
+	} | null;
 }
 
-export function TransactionStatus({ state, onReset }: TransactionStatusProps) {
+export function TransactionStatus({ state, onReset, shareDetails }: TransactionStatusProps) {
 	if (state.status === 'idle' || state.status === 'fetching-routes' || state.status === 'ready') {
 		return null;
 	}
+
+	const parsedShareAmount = shareDetails?.amount ? Number.parseFloat(shareDetails.amount) : undefined;
+	const normalizedShareAmount = typeof parsedShareAmount === 'number' && Number.isFinite(parsedShareAmount)
+		? parsedShareAmount.toFixed(2)
+		: undefined;
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
 			<div className="w-full max-w-md rounded-2xl bg-white p-6">
 				{state.status === 'executing' ? (
 					<div className="text-center">
-						<Loader2 className="mx-auto mb-4 h-16 w-16 animate-spin text-blue-600" />
-						<h3 className="mb-2 text-xl font-bold">Bridging in Progress</h3>
-						<p className="mb-4 text-gray-600">Please confirm transactions in your wallet</p>
-						<div className="space-y-2">
-							<div className="flex items-center gap-2 text-sm">
-								<div className="h-2 w-2 animate-pulse rounded-full bg-blue-600" />
-								<span>Step 1: Bridging to HyperEVM...</span>
-							</div>
-							<div className="flex items-center gap-2 text-sm text-gray-400">
-								<div className="h-2 w-2 rounded-full bg-gray-300" />
-								<span>Step 2: Depositing to Hyperliquid...</span>
-							</div>
-						</div>
+						<h3 className="mb-6 text-xl font-bold">Bridge in Progress</h3>
+						<LiveProgress txHash={state.txHash} />
+						<p className="mt-6 text-sm text-gray-600">Please keep this window open...</p>
 					</div>
 				) : null}
 
@@ -55,6 +57,15 @@ export function TransactionStatus({ state, onReset }: TransactionStatusProps) {
 									<ExternalLink className="h-4 w-4" />
 								</a>
 							) : null}
+              {shareDetails ? (
+                <div className="mb-4 flex justify-center">
+                  <ShareButton
+                    amount={normalizedShareAmount}
+                    time={shareDetails.estimatedTime}
+                    gasSaved={shareDetails.gasCost}
+                  />
+                </div>
+              ) : null}
 							<button
 								onClick={onReset}
 								className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700"

@@ -2,15 +2,13 @@
 
 import { motion } from 'framer-motion';
 import { Activity, AlertCircle, CheckCircle } from 'lucide-react';
-import { useNetworkStatus } from '@/lib/hooks/useNetworkStatus';
+import type { NetworkStatus as NetworkStatusType } from '@/lib/hooks/useNetworkStatus';
 
 interface NetworkStatusProps {
-  chainId: number;
+  status: NetworkStatusType;
 }
 
-export function NetworkStatus({ chainId }: NetworkStatusProps) {
-  const { status } = useNetworkStatus(chainId);
-
+export function NetworkStatus({ status }: NetworkStatusProps) {
   const getStatusClasses = () => {
     switch (status.congestion) {
       case 'low':

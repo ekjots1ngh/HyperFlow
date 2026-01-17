@@ -15,6 +15,7 @@ import { useHyperliquidDeposit } from '@/lib/hooks/useHyperliquidDeposit';
 import { useTransactionStore } from '@/lib/store/transactions';
 import { triggerHaptic, useIsMobile } from '@/lib/utils/mobile';
 import { RouteCard } from './bridge/RouteCard';
+import { SmartSuggestions } from './bridge/SmartSuggestions';
 import { TransactionStatus } from './bridge/TransactionStatus';
 import { BottomSheet } from './mobile/BottomSheet';
 import { MobileHeader } from './mobile/MobileHeader';
