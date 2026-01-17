@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight } from "lucide-react";
 
@@ -29,9 +29,13 @@ const STEPS = [
 
 export function Tutorial({ onComplete }: { onComplete: () => void }) {
 	const [step, setStep] = useState(0);
-	const [show, setShow] = useState(
-		typeof window !== "undefined" && !localStorage.getItem("hyperflow_tutorial_done"),
-	);
+	const [show, setShow] = useState(false);
+
+	useEffect(() => {
+		if (!localStorage.getItem("hyperflow_tutorial_done")) {
+			setShow(true);
+		}
+	}, []);
 
 	const handleComplete = () => {
 		localStorage.setItem("hyperflow_tutorial_done", "true");
