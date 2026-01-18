@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowDown, Info, Zap } from 'lucide-react';
+import { ArrowDown, Info, Loader2, Zap } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import type { RoutesRequest } from '@lifi/sdk';
 import type { Address } from 'viem';
@@ -24,6 +24,7 @@ import { SmartSuggestions } from './bridge/SmartSuggestions';
 import { TransactionStatus } from './bridge/TransactionStatus';
 import { NetworkStatus } from './bridge/NetworkStatus';
 import { GasAlert } from './bridge/GasAlert';
+import { ErrorRecovery } from './bridge/ErrorRecovery';
 import { PriceImpact } from './bridge/PriceImpact';
 import { formatTokenAmount } from '@/lib/utils/format';
 import { RouteInsightsCard } from './bridge/RouteInsights';
@@ -309,6 +310,12 @@ export function BridgeInterface() {
         }
 
         const numericAmount = Number.parseFloat(txAmount);
+        if (numericAmount === 420.69) {
+          const meme = checkAchievement('meme_lord', 1);
+          if (meme) {
+            setUnlockedAchievement(meme);
+          }
+        }
         if (Number.isFinite(numericAmount) && numericAmount > 10_000) {
           const whale = checkAchievement('whale', numericAmount);
           if (whale) {
@@ -418,6 +425,7 @@ export function BridgeInterface() {
                 </div>
               </div>
 
+
               <SmartSuggestions
                 amount={amount}
                 fromChain={fromChain}
@@ -427,6 +435,10 @@ export function BridgeInterface() {
                   // Optional: surface reason with toast
                 }}
               />
+
+              <p className="text-xs text-gray-400 text-center mt-2">
+                💡 Pro tip: Press Cmd+K to focus amount, Cmd+Enter to bridge
+              </p>
 
               <div className="flex items-center justify-between mb-2">
                 <select
@@ -496,8 +508,6 @@ export function BridgeInterface() {
                 </p>
               ) : isTokenPriceLoading ? (
                 <p className="text-xs text-gray-500">Fetching live token price…</p>
-              ) : tokenPriceError ? (
-                <p className="text-xs text-red-500">Unable to load token price.</p>
               ) : null}
               {selectedRoute && amount ? (
                 <PriceImpact
@@ -557,40 +567,59 @@ export function BridgeInterface() {
               </button>
             ) : null}
 
-            {isLoading && <RouteSkeleton />}
 
-            {!isLoading && !isMobile && routes.length > 0 ? (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600">Routes ({routes.length})</p>
-                <div className="space-y-2">
-                  {routes.map((route, index) => (
-                    <RouteCard
-                      key={route.id}
-                      route={route}
-                      isSelected={effectiveSelectedIndex === index}
-                      onSelect={() => handleRouteSelect(index)}
-                    />
-                  ))}
-                </div>
+            {/* Refactored routes section */}
+            {isLoading ? (
+              <RouteSkeleton />
+            ) : routes.length > 0 && !isMobile ? (
+              <div className="space-y-3">
+                {/* ... route cards ... */}
+                {routes.map((route, index) => (
+                  <RouteCard
+                    key={route.id}
+                    route={route}
+                    isSelected={effectiveSelectedIndex === index}
+                    onSelect={() => handleRouteSelect(index)}
+                  />
+                ))}
               </div>
             ) : null}
 
             {error ? (
-              <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-sm text-red-600">{error}</div>
+              <>
+                <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-sm text-red-600">{error}</div>
+                <ErrorRecovery
+                  error={error}
+                  onRetry={() => {
+                    window.location.reload();
+                  }}
+                />
+              </>
             ) : null}
 
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={handleBridge}
-              disabled={!selectedRoute || isLoading || bridgeState.status === 'executing'}
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 py-5 text-lg font-bold text-white shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:to-gray-300"
+              disabled={!routes.length || isLoading || bridgeState.status === 'executing'}
+              className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-5 text-lg font-bold text-white shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:from-gray-300 disabled:via-gray-300 disabled:to-gray-300"
               type="button"
             >
-              {isLoading
-                ? 'Finding Routes...'
-                : bridgeState.status === 'executing'
-                ? 'Bridging...'
-                : 'Bridge to Hyperliquid'}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                initial={{ x: '-100%' }}
+                whileHover={{ x: '100%' }}
+                transition={{ duration: 0.5 }}
+              />
+
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                {bridgeState.status === 'executing' ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                {isLoading
+                  ? 'Finding Best Routes...'
+                  : bridgeState.status === 'executing'
+                  ? 'Bridging in Progress...'
+                  : 'Bridge to Hyperliquid →'}
+              </span>
             </motion.button>
           </motion.div>
         ) : (

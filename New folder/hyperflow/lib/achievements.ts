@@ -60,6 +60,16 @@ export const ACHIEVEMENTS: Achievement[] = [
 		maxProgress: 10,
 		reward: 'HyperFlow veteran!',
 	},
+	{
+		id: 'meme_lord',
+		name: 'Meme Lord',
+		description: 'Bridge exactly $420.69',
+		icon: '😎',
+		unlocked: false,
+		progress: 0,
+		maxProgress: 1,
+		reward: 'You are a legend!',
+	},
 ];
 
 export function checkAchievement(achievementId: string, progress: number): Achievement | null {
