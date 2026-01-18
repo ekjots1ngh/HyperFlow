@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { TrendingUp, DollarSign, Zap, Award } from "lucide-react";
 import { StatsCard } from "@/components/analytics/StatsCard";
+import { Leaderboard } from "@/components/Leaderboard";
 import { useTransactionStore } from "@/lib/store/transactions";
 
 const STATUS_BADGE_CLASSES: Record<"success" | "pending" | "failed", string> = {
@@ -110,6 +111,10 @@ export default function AnalyticsPage() {
             color="orange"
           />
         </section>
+
+        <div className="mb-8">
+          <Leaderboard />
+        </div>
 
         <section className="rounded-2xl bg-white p-6 shadow-lg">
           <h2 className="text-xl font-bold text-gray-900">Recent Activity</h2>

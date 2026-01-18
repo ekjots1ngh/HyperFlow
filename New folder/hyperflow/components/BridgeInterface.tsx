@@ -12,8 +12,11 @@ import { useRoutes } from '@/lib/hooks/useRoutes';
 import { useExecuteBridge } from '@/lib/hooks/useExecuteBridge';
 import { useHyperliquidDeposit } from '@/lib/hooks/useHyperliquidDeposit';
 import { useNetworkStatus } from '@/lib/hooks/useNetworkStatus';
+import { useTokenPrice } from '@/lib/hooks/useTokenPrice';
 import { useTransactionStore } from '@/lib/store/transactions';
 import type { BridgeState } from '@/lib/types';
+import { analyzeRoutes } from '@/lib/ai/routeAnalyzer';
+import type { RouteInsights } from '@/lib/ai/routeAnalyzer';
 import { triggerHaptic, useIsMobile } from '@/lib/utils/mobile';
 import { RouteCard } from './bridge/RouteCard';
 import { RouteSkeleton } from './bridge/RouteSkeleton';
@@ -21,6 +24,9 @@ import { SmartSuggestions } from './bridge/SmartSuggestions';
 import { TransactionStatus } from './bridge/TransactionStatus';
 import { NetworkStatus } from './bridge/NetworkStatus';
 import { GasAlert } from './bridge/GasAlert';
+import { PriceImpact } from './bridge/PriceImpact';
+import { formatTokenAmount } from '@/lib/utils/format';
+import { RouteInsightsCard } from './bridge/RouteInsights';
 import Link from 'next/link';
 import { BottomSheet } from './mobile/BottomSheet';
 import { MobileHeader } from './mobile/MobileHeader';
@@ -45,6 +51,8 @@ export function BridgeInterface() {
   const [showRoutes, setShowRoutes] = useState<boolean>(false);
   const [autoDeposit, setAutoDeposit] = useState<boolean>(true);
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
+  const [insights, setInsights] = useState<RouteInsights | null>(null);
+  const [showInsights, setShowInsights] = useState<boolean>(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mark hydration readiness after mount
@@ -78,6 +86,19 @@ export function BridgeInterface() {
   }, [address, amount, fromChain, isConnected]);
 
   const { routes, isLoading, error } = useRoutes(routeRequest);
+  useEffect(() => {
+    if (routes.length > 0) {
+      console.log('🔍 RAW ROUTE DATA:', {
+        fromAmount: routes[0].fromAmount,
+        toAmount: routes[0].toAmount,
+        toAmountType: typeof routes[0].toAmount,
+        steps: routes[0].steps.map((step) => ({
+          fromAmount: step.fromAmount,
+          toAmount: step.toAmount,
+        })),
+      });
+    }
+  }, [routes]);
   const { state: bridgeState, execute, reset: resetBridge } = useExecuteBridge();
   const { state: depositState, depositToHyperliquid, reset: resetDeposit } = useHyperliquidDeposit();
   const { addTransaction, updateTransaction } = useTransactionStore();
@@ -98,6 +119,36 @@ export function BridgeInterface() {
 
   const effectiveSelectedIndex = routes.length > 0 ? Math.min(selectedRouteIndex, routes.length - 1) : -1;
   const selectedRoute = effectiveSelectedIndex >= 0 ? routes[effectiveSelectedIndex] : undefined;
+
+  const destinationRouteToken = selectedRoute?.steps?.[selectedRoute.steps.length - 1]?.toToken;
+  const {
+    priceUSD: destinationTokenPrice,
+    tokenMeta: destinationTokenMeta,
+    isLoading: isTokenPriceLoading,
+    error: tokenPriceError,
+  } = useTokenPrice(
+    destinationRouteToken?.address ?? HYPER_EVM_USDC_ADDRESS,
+    destinationRouteToken?.chainId ?? HYPER_EVM_CHAIN_ID,
+  );
+
+  const parsedInputAmount = Number.parseFloat(amount || '0');
+  const hasValidInputAmount = Number.isFinite(parsedInputAmount) && parsedInputAmount > 0;
+  const rawDecimals = destinationRouteToken?.decimals ?? destinationTokenMeta?.decimals;
+  const decimalsForToken = typeof rawDecimals === 'number' && Number.isFinite(rawDecimals) ? rawDecimals : 6;
+  const tokenPrecision = Math.min(6, Math.max(0, decimalsForToken));
+  const minimumFractionDigits = tokenPrecision >= 2 ? 2 : 0;
+  const estimatedTokensFromPrice =
+    hasValidInputAmount && destinationTokenPrice !== null && destinationTokenPrice > 0
+      ? parsedInputAmount / destinationTokenPrice
+      : null;
+  const estimatedTokenSymbol = destinationRouteToken?.symbol ?? destinationTokenMeta?.symbol ?? 'USDC';
+  const formattedEstimatedTokens =
+    estimatedTokensFromPrice !== null && Number.isFinite(estimatedTokensFromPrice)
+      ? new Intl.NumberFormat('en-US', {
+          minimumFractionDigits,
+          maximumFractionDigits: tokenPrecision,
+        }).format(estimatedTokensFromPrice)
+      : null;
 
   const transactionStatusState = useMemo<BridgeState>(() => {
     if (depositState.status === 'idle') {
@@ -127,6 +178,42 @@ export function BridgeInterface() {
 
     return bridgeState;
   }, [bridgeState, depositState]);
+
+  useEffect(() => {
+    if (routes.length === 0 || !amount) {
+      setInsights(null);
+      setShowInsights(false);
+      return;
+    }
+
+    console.log('🔍 Route data:', {
+      fromAmount: routes[0]?.fromAmount,
+      toAmount: routes[0]?.toAmount,
+      steps: routes[0]?.steps,
+    });
+
+    let isCancelled = false;
+
+    analyzeRoutes(routes, amount)
+      .then((result) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setInsights(result);
+        setShowInsights(true);
+      })
+      .catch((analysisError) => {
+        if (!isCancelled) {
+          console.error('Route analysis failed:', analysisError);
+          setShowInsights(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [amount, routes]);
 
   const handleBridge = async () => {
     if (!selectedRoute || !address) {
@@ -188,6 +275,7 @@ export function BridgeInterface() {
 
   const handleAmountChange = (value: string) => {
     setAmount(value);
+    console.log("Entered bridge amount:", value);
     const parsed = Number.parseFloat(value);
     if (value && !Number.isNaN(parsed) && parsed > 0) {
       triggerHaptic('light');
@@ -268,7 +356,14 @@ export function BridgeInterface() {
       <div className={isMobile ? 'space-y-6 px-4 py-6' : 'mx-auto max-w-2xl space-y-6 p-6'}>
         {!isMobile ? (
           <div className="flex flex-col gap-6">
-            <div className="flex justify-end">
+            <div className="mb-4 flex justify-end gap-3">
+              <Link
+                href="/leaderboard"
+                className="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-200"
+              >
+                <span role="img" aria-label="leaderboard">🏆</span>
+                Leaderboard
+              </Link>
               <Link
                 href="/analytics"
                 className="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-200"
@@ -367,15 +462,50 @@ export function BridgeInterface() {
               <div className="rounded-2xl border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-purple-50 px-6 py-6">
                 <div className="text-3xl font-bold text-gray-900">
                   {isLoading ? (
-                    <span className="text-gray-400">...</span>
-                  ) : selectedRoute ? (
-                    <span>{(Number.parseFloat(selectedRoute.toAmount ?? '0') / 1e6).toFixed(2)}</span>
+                    <motion.span
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                      className="text-gray-400"
+                    >
+                      Calculating...
+                    </motion.span>
+                  ) : routes[selectedRouteIndex] ? (
+                    <span>
+                      {(() => {
+                        const route = routes[selectedRouteIndex];
+                        const fromAmt = Number.parseFloat(amount) || 0;
+                        const estimated = fromAmt * 0.997;
+                        return Number.isFinite(estimated) ? estimated.toFixed(2) : '0.00';
+                      })()}
+                    </span>
                   ) : (
                     <span className="text-gray-400">0.0</span>
                   )}
                 </div>
-                <div className="mt-1 text-sm text-gray-600">USDC</div>
+                <div className="mt-1 text-sm text-gray-600">
+                  USDC on HyperEVM{' '}
+                  <span className="ml-2 text-xs text-gray-500">(estimated)</span>
+                </div>
               </div>
+              {destinationTokenPrice !== null ? (
+                <p className="text-xs text-gray-600">
+                  Live price via LI.FI: ${destinationTokenPrice.toFixed(4)} USD
+                  {hasValidInputAmount && formattedEstimatedTokens
+                    ? ` · Estimated output: ${formattedEstimatedTokens} ${estimatedTokenSymbol}`
+                    : ''}
+                </p>
+              ) : isTokenPriceLoading ? (
+                <p className="text-xs text-gray-500">Fetching live token price…</p>
+              ) : tokenPriceError ? (
+                <p className="text-xs text-red-500">Unable to load token price.</p>
+              ) : null}
+              {selectedRoute && amount ? (
+                <PriceImpact
+                  fromAmount={amount}
+                  toAmount={formatTokenAmount(selectedRoute.toAmount ?? '0', 6)}
+                />
+              ) : null}
+              {showInsights && insights ? <RouteInsightsCard insights={insights} /> : null}
             </div>
 
             <div className="flex items-center justify-between rounded-xl border-2 border-blue-100 bg-blue-50 p-4">

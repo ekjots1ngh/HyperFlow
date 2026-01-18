@@ -2,6 +2,7 @@
 
 import { Fuel, TrendingUp } from 'lucide-react';
 import type { RouteOption } from '@/lib/types';
+import { formatTokenAmount } from '@/lib/utils/format';
 import { SpeedEstimate } from './SpeedEstimate';
 
 interface RouteCardProps {
@@ -12,7 +13,7 @@ interface RouteCardProps {
 
 export function RouteCard({ route, isSelected, onSelect }: RouteCardProps) {
 	const gasCost = Number.parseFloat(route.gasCost);
-	const toAmount = Number.parseFloat(route.toAmount) / 1e6;
+	const formattedToAmount = formatTokenAmount(route.toAmount, 6);
 
 	return (
 		<button
@@ -59,9 +60,7 @@ export function RouteCard({ route, isSelected, onSelect }: RouteCardProps) {
 			<div className="mt-3 border-t pt-3">
 				<div className="flex items-center justify-between">
 					<span className="text-xs text-gray-500">You&apos;ll receive</span>
-					<span className="text-lg font-bold">
-						{Number.isFinite(toAmount) ? toAmount.toFixed(2) : '0.00'} USDC
-					</span>
+					<span className="text-lg font-bold">{formattedToAmount} USDC</span>
 				</div>
 			</div>
 		</button>
